@@ -35,14 +35,34 @@ function startTranscode(streamKey) {
 
 function stopTranscode(streamKey) {
   return new Promise((resolve, reject) => {
+    console.log('stopTranscode', streamKey);
     const proc = processes.get(streamKey);
-    if (!proc) return resolve();
-
-    proc.kill('SIGTERM');
-    proc.on('exit', () => {
+    if (!proc) {
+      console.log('No process found for streamKey:', streamKey);
+      return resolve();
+    }
+    
+    console.log('Found process, killing:', streamKey);
+    
+    // Set a timeout to force kill if SIGTERM doesn't work
+    const timeout = setTimeout(() => {
+      console.log('Force killing process:', streamKey);
+      proc.kill('SIGKILL');
+    }, 5000); // 5 second timeout
+    
+    // Listen for the existing exit event
+    const exitHandler = (code, signal) => {
+      console.log('Process exited:', streamKey, 'code:', code, 'signal:', signal);
+      clearTimeout(timeout);
       processes.delete(streamKey);
       resolve();
-    });
+    };
+    
+    // Add our exit handler
+    proc.once('exit', exitHandler);
+    
+    // Send SIGTERM first
+    proc.kill('SIGTERM');
   });
 }
 

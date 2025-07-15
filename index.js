@@ -5,8 +5,8 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-app.post('/transcode', async (req, res) => {
-  const { streamKey } = req.body;
+app.post('/transcode/:streamKey', async (req, res) => {
+  const { streamKey } = req.params;
   if (!streamKey) return res.status(400).json({ error: 'Missing streamKey' });
 
   if (isEncoding()) {
@@ -22,9 +22,12 @@ app.post('/transcode', async (req, res) => {
   }
 });
 
-app.post('/stop', async (req, res) => {
+app.delete('/transcode/:streamKey', async (req, res) => {
+  const { streamKey } = req.params;
+  if (!streamKey) return res.status(400).json({ error: 'Missing streamKey' });
+
   try {
-    await stopTranscode();
+    await stopTranscode(streamKey);
     res.status(200).json({ message: 'Transcoding stopped' });
   } catch (e) {
     res.status(500).json({ error: 'Failed to stop encoding' });
