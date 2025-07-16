@@ -3,6 +3,8 @@ const fs = require('fs');
 function getFfmpegArgs(inputUrl, outputDir) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
+  // TODO: Use audio stream mapping instead of hardcoding the audio streams
+
   return [
     '-i', inputUrl,
     '-c:a', 'aac',
@@ -23,10 +25,13 @@ function getFfmpegArgs(inputUrl, outputDir) {
     '-f', 'hls',
     '-hls_segment_filename', `${outputDir}/%v_%03d.ts`,
     '-master_pl_name', 'index.m3u8',
-    '-var_stream_map', 'v:0,name:720p v:1,name:480p v:2,name:360p',
+    '-var_stream_map', 'v:0,a:0,name:720p v:1,a:1,name:480p v:2,a:2,name:360p',
     '-map', '0:v:0', '-s:v:0', '1280x720', '-b:v:0', '2500k', '-maxrate:v:0', '2750k', '-bufsize:v:0', '5000k',
+    '-map', '0:a:0', '-c:a:0', 'aac', '-b:a:0', '128k',
     '-map', '0:v:0', '-s:v:1', '854x480', '-b:v:1', '1200k', '-maxrate:v:1', '1320k', '-bufsize:v:1', '2400k',
+    '-map', '0:a:0', '-c:a:1', 'aac', '-b:a:1', '128k',
     '-map', '0:v:0', '-s:v:2', '640x360', '-b:v:2', '700k', '-maxrate:v:2', '770k', '-bufsize:v:2', '1400k',
+    '-map', '0:a:0', '-c:a:2', 'aac', '-b:a:2', '128k',
     `${outputDir}/%v.m3u8`
   ];
 }

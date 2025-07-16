@@ -35,7 +35,7 @@ function startTranscode(streamKey) {
 
 function stopTranscode(streamKey) {
   return new Promise((resolve, reject) => {
-    console.log('stopTranscode', streamKey);
+
     const proc = processes.get(streamKey);
     if (!proc) {
       console.log('No process found for streamKey:', streamKey);
