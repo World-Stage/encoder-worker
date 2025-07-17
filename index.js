@@ -1,5 +1,8 @@
 const express = require('express');
+const path = require('path');
 const { startTranscode, isEncoding, stopTranscode } = require('./transcode');
+const { deleteDirectoryRecursive } = require('./utils');
+
 require('dotenv').config();
 
 const app = express();
@@ -28,8 +31,12 @@ app.delete('/transcode/:streamKey', async (req, res) => {
 
   try {
     await stopTranscode(streamKey);
+    // Cleanup output directory even if process not found
+    const outputDir = path.join(process.env.HLS_OUTPUT_DIR, streamKey);
+    await deleteDirectoryRecursive(outputDir);
     res.status(200).json({ message: 'Transcoding stopped' });
   } catch (e) {
+    console.error('Error stopping transcode or cleaning up:', e);
     res.status(500).json({ error: 'Failed to stop encoding' });
   }
 });
