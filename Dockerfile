@@ -1,4 +1,3 @@
-# FROM: prebuilt ffmpeg image
 FROM jrottenberg/ffmpeg:6.1-ubuntu
 
 # Install Node.js
@@ -7,10 +6,8 @@ RUN apt-get update && apt-get install -y curl gnupg \
     && apt-get install -y nodejs \
     && apt-get clean
 
-# Set working directory
 WORKDIR /usr/src/app
 
-# Copy app source
 COPY package*.json ./
 RUN npm install
 COPY . .

@@ -1,12 +1,12 @@
-# fly.toml app configuration file generated for transcoder-worker on 2025-07-23T20:55:09-06:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = 'transcoder-worker'
+app = 'stream-service'
 primary_region = 'iad'
 
 [build]
+  dockerfile = "Dockerfile"
+
+[processes]
+  nginx = "/starter-nginx.sh"
+  transcoder = "index.js"
 
 [http_service]
   internal_port = 3001
@@ -14,13 +14,43 @@ primary_region = 'iad'
   auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ['app']
+  processes = ['transcoder']
+
+[env]
+  API_HOST = "stagio-api.fly.dev"
+  HLS_OUTPUT_DIR = "/mnt/hls"
+  NGINX_RTMP_URL = "rtmp://stream-service.fly.dev:1935/live"
+  NGINX_HLS_URL = "http://stream-service.fly.dev:8080/hls"
+
+# HLS via nginx
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  processes = ['nginx']
+  [[services.ports]]
+    port = 8080
+
+# RTMP via nginx
+[[services]]
+  internal_port = 1935
+  protocol = "tcp"
+  processes = ['nginx']
+  [[services.ports]]
+    port = 1935
+
+# Internal API access (for transcoder)
+[[services]]
+  internal_port = 3001
+  protocol = "tcp"
+  processes = ['transcoder']
+  [[services.ports]]
+    port = 3001
+
+[[mounts]]
+  source = "hls_data"
+  destination = "/mnt/hls"
 
 [[vm]]
   memory = '2gb'
   cpu_kind = 'shared'
   cpus = 1
-
-[mounts]
-  source = "hls_data"
-  destination = "/mnt/hls"
